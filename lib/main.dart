@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 
+import 'workout_screen.dart';
+
 void main() {
-  runApp(MaterialApp(theme: ThemeData.dark(), home: ExerciseListScreen()));
+  runApp(
+    MaterialApp(
+      theme: ThemeData.dark(),
+      home: ExerciseListScreen(),
+    ),
+  );
 }
 
 class ExerciseListScreen extends StatelessWidget {
@@ -13,7 +20,6 @@ class ExerciseListScreen extends StatelessWidget {
     'Klimmzüge',
     'Bizepscurls',
     'Schulterdrücken',
-    'Squats',
   ];
 
   @override
@@ -24,7 +30,6 @@ class ExerciseListScreen extends StatelessWidget {
       ),
 
       body: ListView.builder(
-        //scrollbare Liste
         padding: EdgeInsets.all(16),
         itemCount: exercises.length,
         itemBuilder: (context, index) {
@@ -32,9 +37,23 @@ class ExerciseListScreen extends StatelessWidget {
             child: ListTile(
               title: Text(
                 exercises[index],
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               subtitle: Text('0 Trainings'),
+
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => WorkoutScreen(
+                      exerciseName: exercises[index],
+                    ),
+                  ),
+                );
+              },
             ),
           );
         },
