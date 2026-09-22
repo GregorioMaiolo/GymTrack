@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'database/database_helper.dart';
+import 'models/exercise.dart';
 import 'workout_screen.dart';
+import 'create_exercise_screen.dart';
 
 void main() {
   runApp(
@@ -11,16 +14,29 @@ void main() {
   );
 }
 
-class ExerciseListScreen extends StatelessWidget {
-  ExerciseListScreen({super.key});
+class ExerciseListScreen extends StatefulWidget {
+  const ExerciseListScreen({super.key});
 
-  final List<String> exercises = [
-    'Bankdrücken',
-    'Kniebeugen',
-    'Klimmzüge',
-    'Bizepscurls',
-    'Schulterdrücken',
-  ];
+  @override
+  State<ExerciseListScreen> createState() => _ExerciseListScreenState();
+}
+
+class _ExerciseListScreenState extends State<ExerciseListScreen> {
+  List<Exercise> exercises = [];
+
+  @override
+  void initState() {
+    super.initState();
+    loadExercises();
+  }
+
+  Future<void> loadExercises() async {
+    final data = await DatabaseHelper.getExercises();
+
+    setState(() {
+      exercises = data;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,23 +49,28 @@ class ExerciseListScreen extends StatelessWidget {
         padding: EdgeInsets.all(16),
         itemCount: exercises.length,
         itemBuilder: (context, index) {
+          final exercise = exercises[index];
+
           return Card(
             child: ListTile(
               title: Text(
-                exercises[index],
+                exercise.name,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              subtitle: Text('0 Trainings'),
+
+              subtitle: Text(
+                '${exercise.description}\n0 Trainings',
+              ),
 
               onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => WorkoutScreen(
-                      exerciseName: exercises[index],
+                      exerciseName: exercise.name,
                     ),
                   ),
                 );
@@ -60,7 +81,16 @@ class ExerciseListScreen extends StatelessWidget {
       ),
 
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CreateExerciseScreen(),
+            ),
+          );
+
+          loadExercises();
+        },
         child: Icon(Icons.add),
       ),
     );
