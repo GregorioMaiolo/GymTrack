@@ -25,6 +25,11 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
   List<Exercise> exercises = [];
   Map<int, int> workoutCounts = {};
 
+  final GlobalKey<AnimatedListState> listKey =
+      GlobalKey<AnimatedListState>();
+
+  bool loaded = false;
+
   @override
   void initState() {
     super.initState();
@@ -43,49 +48,91 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
     setState(() {
       exercises = data;
       workoutCounts = counts;
+      loaded = true;
     });
+  }
+
+  Future<void> addNewExerciseToList() async {
+    final data = await DatabaseHelper.getExercises();
+
+    if (data.length > exercises.length) {
+      final newExercise = data.last;
+      final newIndex = exercises.length;
+
+      setState(() {
+        exercises.add(newExercise);
+        workoutCounts[newExercise.id] = 0;
+      });
+
+      listKey.currentState?.insertItem(
+        newIndex,
+        duration: Duration(milliseconds: 1000),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (!loaded) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text('GymTracker'),
+        ),
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text('GymTracker'),
       ),
 
-      body: ListView.builder(
+      body: AnimatedList(
+        key: listKey,
         padding: EdgeInsets.all(16),
-        itemCount: exercises.length,
-        itemBuilder: (context, index) {
+        initialItemCount: exercises.length,
+
+        itemBuilder: (context, index, animation) {
           final exercise = exercises[index];
 
-          return Card(
-            child: ListTile(
-              title: Text(
-                exercise.name,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+          return SizeTransition(
+            sizeFactor: animation,
 
-              subtitle: Text(
-                '${exercise.description}\n${workoutCounts[exercise.id] ?? 0} Trainings',
-              ),
+            child: FadeTransition(
+              opacity: animation,
 
-              onTap: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => WorkoutScreen(
-                      exerciseId: exercise.id,
-                      exerciseName: exercise.name,
+              child: Card(
+                child: ListTile(
+                  title: Text(
+                    exercise.name,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                );
 
-                loadExercises();
-              },
+                  subtitle: Text(
+                    '${exercise.description}\n'
+                    '${workoutCounts[exercise.id] ?? 0} Trainings',
+                  ),
+
+                  onTap: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => WorkoutScreen(
+                          exerciseId: exercise.id,
+                          exerciseName: exercise.name,
+                        ),
+                      ),
+                    );
+
+                    loadExercises();
+                  },
+                ),
+              ),
             ),
           );
         },
@@ -100,8 +147,9 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
             ),
           );
 
-          loadExercises();
+          addNewExerciseToList();
         },
+
         child: Icon(Icons.add),
       ),
     );
