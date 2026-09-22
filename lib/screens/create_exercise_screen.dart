@@ -48,11 +48,10 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () async {
-                  if (nameController.text.isEmpty ||
-                      descriptionController.text.isEmpty) {
+                  if (nameController.text.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Bitte Name und Beschreibung eingeben.'),
+                        content: Text('Bitte Name eingeben.'),
                       ),
                     );
                     return;

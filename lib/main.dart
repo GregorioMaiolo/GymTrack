@@ -25,8 +25,7 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
   List<Exercise> exercises = [];
   Map<int, int> workoutCounts = {};
 
-  final GlobalKey<AnimatedListState> listKey =
-      GlobalKey<AnimatedListState>();
+  final GlobalKey<AnimatedListState> listKey = GlobalKey<AnimatedListState>();
 
   bool loaded = false;
 
@@ -89,54 +88,89 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
         title: Text('GymTracker'),
       ),
 
-      body: AnimatedList(
-        key: listKey,
-        padding: EdgeInsets.all(16),
-        initialItemCount: exercises.length,
+      body: exercises.isEmpty
+          ? Center(
+              child: Padding(
+                padding: EdgeInsets.all(30),
 
-        itemBuilder: (context, index, animation) {
-          final exercise = exercises[index];
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
 
-          return SizeTransition(
-            sizeFactor: animation,
-
-            child: FadeTransition(
-              opacity: animation,
-
-              child: Card(
-                child: ListTile(
-                  title: Text(
-                    exercise.name,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                  children: [
+                    Icon(
+                      Icons.fitness_center,
+                      size: 60,
                     ),
-                  ),
 
-                  subtitle: Text(
-                    '${exercise.description}\n'
-                    '${workoutCounts[exercise.id] ?? 0} Trainings',
-                  ),
+                    SizedBox(height: 20),
 
-                  onTap: () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => WorkoutScreen(
-                          exerciseId: exercise.id,
-                          exerciseName: exercise.name,
-                        ),
+                    Text(
+                      'Noch keine Übungen vorhanden.',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
                       ),
-                    );
+                      textAlign: TextAlign.center,
+                    ),
 
-                    loadExercises();
-                  },
+                    SizedBox(height: 10),
+
+                    Text(
+                      'Klicke auf +, um deine erste Übung zu erstellen.',
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
               ),
+            )
+          : AnimatedList(
+              key: listKey,
+              padding: EdgeInsets.all(16),
+              initialItemCount: exercises.length,
+
+              itemBuilder: (context, index, animation) {
+                final exercise = exercises[index];
+
+                return SizeTransition(
+                  sizeFactor: animation,
+
+                  child: FadeTransition(
+                    opacity: animation,
+
+                    child: Card(
+                      child: ListTile(
+                        title: Text(
+                          exercise.name,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+
+                        subtitle: Text(
+                          '${exercise.description}\n'
+                          '${workoutCounts[exercise.id] ?? 0} Trainings',
+                        ),
+
+                        onTap: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => WorkoutScreen(
+                                exerciseId: exercise.id,
+                                exerciseName: exercise.name,
+                              ),
+                            ),
+                          );
+
+                          loadExercises();
+                        },
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
-          );
-        },
-      ),
 
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
