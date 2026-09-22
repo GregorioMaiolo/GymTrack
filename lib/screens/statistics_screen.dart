@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 import '../database/database_helper.dart';
 import '../models/workout_set.dart';
@@ -22,7 +23,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
   @override
   void initState() { //wird aufgerufen, wenn der State initialisiert wird
-    super.initState(); 
+    super.initState();
     loadWorkoutSets(); //wenn initialisiert, lade die WorkoutSets
   }
 
@@ -30,7 +31,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     final data = await DatabaseHelper.getWorkoutSets(widget.exerciseId);
 
     setState(() {
-      workoutSets = data;
+      workoutSets = data.reversed.toList();
     });
   }
 
@@ -41,9 +42,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
     double highest = 0;
 
-    for (final workoutSet in workoutSets) {
-      if (workoutSet.weight > highest) {
-        highest = workoutSet.weight;
+    for (final set in workoutSets) {
+      if (set.weight > highest) {
+        highest = set.weight;
       }
     }
 
@@ -57,23 +58,19 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
     double total = 0;
 
-    for (final workoutSet in workoutSets) {
-      total += workoutSet.weight;
+    for (final set in workoutSets) {
+      total += set.weight;
     }
 
     return total / workoutSets.length;
   }
 
   int getHighestRepetitions() {
-    if (workoutSets.isEmpty) {
-      return 0;
-    }
-
     int highest = 0;
 
-    for (final workoutSet in workoutSets) {
-      if (workoutSet.repetitions > highest) {
-        highest = workoutSet.repetitions;
+    for (final set in workoutSets) {
+      if (set.repetitions > highest) {
+        highest = set.repetitions;
       }
     }
 
@@ -90,9 +87,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       body: Padding(
         padding: EdgeInsets.all(16),
 
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-
+        child: ListView(
           children: [
             Text(
               widget.exerciseName,
@@ -107,13 +102,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             Card(
               child: ListTile(
                 title: Text('Trainingssätze'),
-                trailing: Text(
-                  '${workoutSets.length}',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                trailing: Text('${workoutSets.length}'),
               ),
             ),
 
@@ -122,10 +111,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 title: Text('Höchstes Gewicht'),
                 trailing: Text(
                   '${getHighestWeight().toStringAsFixed(1)} kg',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
                 ),
               ),
             ),
@@ -135,10 +120,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 title: Text('Durchschnittliches Gewicht'),
                 trailing: Text(
                   '${getAverageWeight().toStringAsFixed(1)} kg',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
                 ),
               ),
             ),
@@ -146,15 +127,115 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             Card(
               child: ListTile(
                 title: Text('Meiste Wiederholungen'),
-                trailing: Text(
-                  '${getHighestRepetitions()}',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                trailing: Text('${getHighestRepetitions()}'),
               ),
             ),
+
+            SizedBox(height: 30),
+
+            Text(
+              'Gewichtsverlauf',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            SizedBox(height: 20),
+
+            if (workoutSets.length >= 2)
+              SizedBox(
+                height: 250,
+                child: LineChart(
+                  LineChartData(
+                    minY: 0,
+
+                    lineBarsData: [
+                      LineChartBarData(
+                        spots: [
+                          for (int i = 0; i < workoutSets.length; i++)
+                            FlSpot(
+                              i.toDouble(),
+                              workoutSets[i].weight,
+                            ),
+                        ],
+                        isCurved: false,
+                        dotData: FlDotData(
+                          show: true,
+                        ),
+                      ),
+                    ],
+
+                    gridData: FlGridData(
+                      show: true,
+                    ),
+
+                    titlesData: FlTitlesData(
+                      topTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: false,
+                        ),
+                      ),
+
+                      rightTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: false,
+                        ),
+                      ),
+
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 40,
+                        ),
+                      ),
+
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          interval: 1,
+                          reservedSize: 35,
+
+                          getTitlesWidget: (value, meta) {
+                            int index = value.toInt();
+
+                            if (value != index.toDouble()) {
+                              return SizedBox();
+                            }
+
+                            if (index < 0 || index >= workoutSets.length) {
+                              return SizedBox();
+                            }
+
+                            String date = workoutSets[index].date;
+
+                            // Datum des vorherigen Punktes
+                            if (index > 0) {
+                              String previousDate = workoutSets[index - 1].date;
+
+                              if (date.substring(0, 10) ==
+                                  previousDate.substring(0, 10)) {
+                                return SizedBox();
+                              }
+                            }
+
+                            return Text(
+                              '${date.substring(8, 10)}.${date.substring(5, 7)}',
+                              style: TextStyle(
+                                fontSize: 10,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              )
+            else
+              Text(
+                'Mindestens 2 Trainings für die Statistik nötig.',
+              ),
           ],
         ),
       ),
