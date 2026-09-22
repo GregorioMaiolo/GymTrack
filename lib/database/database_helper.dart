@@ -89,6 +89,7 @@ class DatabaseHelper {
         'weight': weight,
         'repetitions': repetitions,
         'date': DateTime.now().toIso8601String(),
+        // 'date': '2026-09-21',//für Testen
       },
     );
   }

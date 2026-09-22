@@ -8,7 +8,7 @@ class WorkoutScreen extends StatefulWidget {
   final String exerciseName;
 
   const WorkoutScreen({
-    super.key,//IDE motzt ohne das
+    super.key, //IDE motzt ohne das
     required this.exerciseId,
     required this.exerciseName,
   });
@@ -37,8 +37,29 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
     });
   }
 
+  Map<String, List<WorkoutSet>> groupSetsByDate() {
+    Map<String, List<WorkoutSet>> groupedSets = {};
+
+    for (final workoutSet in workoutSets) {
+      final date = workoutSet.date.substring(0, 10);
+
+      if (!groupedSets.containsKey(date)) {
+        groupedSets[date] = [];
+      }
+
+      groupedSets[date]!.add(workoutSet);
+    }
+
+    return groupedSets;
+  }
+
   Future<void> saveWorkoutSet() async {
     if (weightController.text.isEmpty || repetitionsController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Bitte Gewicht und Wiederholungen eingeben.'),
+        ),
+      );
       return;
     }
 
@@ -134,20 +155,45 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
             SizedBox(height: 12),
 
             Expanded(
-              child: ListView.builder(
-                itemCount: workoutSets.length,
-                itemBuilder: (context, index) {
-                  final workoutSet = workoutSets[index];
+              child: Builder(
+                builder: (context) {
+                  final groupedSets = groupSetsByDate();
+                  final dates = groupedSets.keys.toList();
 
-                  return Card(
-                    child: ListTile(
-                      title: Text(
-                        '${workoutSet.weight} kg × ${workoutSet.repetitions}',
-                      ),
-                      subtitle: Text(
-                        workoutSet.date.substring(0, 10),
-                      ),
-                    ),
+                  return ListView.builder(
+                    itemCount: dates.length,
+                    itemBuilder: (context, index) {
+                      final date = dates[index];
+                      final sets = groupedSets[date]!;
+
+                      return Card(
+                        child: Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                date,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+
+                              SizedBox(height: 8),
+
+                              for (final workoutSet in sets)
+                                Padding(
+                                  padding: EdgeInsets.only(bottom: 4),
+                                  child: Text(
+                                    '${workoutSet.weight} kg × ${workoutSet.repetitions}',
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   );
                 },
               ),
