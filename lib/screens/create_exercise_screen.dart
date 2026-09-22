@@ -5,13 +5,10 @@ class CreateExerciseScreen extends StatefulWidget {
   const CreateExerciseScreen({super.key});
 
   @override
-  State<CreateExerciseScreen> createState() =>
-      _CreateExerciseScreenState();
+  State<CreateExerciseScreen> createState() => _CreateExerciseScreenState();
 }
 
-class _CreateExerciseScreenState
-    extends State<CreateExerciseScreen> {
-
+class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
   final nameController = TextEditingController();
   final descriptionController = TextEditingController();
 
@@ -51,6 +48,16 @@ class _CreateExerciseScreenState
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () async {
+                  if (nameController.text.isEmpty ||
+                      descriptionController.text.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Bitte Name und Beschreibung eingeben.'),
+                      ),
+                    );
+                    return;
+                  }
+
                   await DatabaseHelper.addExercise(
                     nameController.text,
                     descriptionController.text,

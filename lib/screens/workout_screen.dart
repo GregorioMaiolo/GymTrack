@@ -1,18 +1,71 @@
 import 'package:flutter/material.dart';
 
-class WorkoutScreen extends StatelessWidget {
+import '../database/database_helper.dart';
+import '../models/workout_set.dart';
+
+class WorkoutScreen extends StatefulWidget {
+  final int exerciseId;
   final String exerciseName;
 
   const WorkoutScreen({
     super.key,//IDE motzt ohne das
+    required this.exerciseId,
     required this.exerciseName,
   });
+
+  @override
+  State<WorkoutScreen> createState() => _WorkoutScreenState();
+}
+
+class _WorkoutScreenState extends State<WorkoutScreen> {
+  final weightController = TextEditingController();
+  final repetitionsController = TextEditingController();
+
+  List<WorkoutSet> workoutSets = [];
+
+  @override
+  void initState() {
+    super.initState();
+    loadWorkoutSets();
+  }
+
+  Future<void> loadWorkoutSets() async {
+    final data = await DatabaseHelper.getWorkoutSets(widget.exerciseId);
+
+    setState(() {
+      workoutSets = data;
+    });
+  }
+
+  Future<void> saveWorkoutSet() async {
+    if (weightController.text.isEmpty || repetitionsController.text.isEmpty) {
+      return;
+    }
+
+    final weight = double.tryParse(weightController.text);
+    final repetitions = int.tryParse(repetitionsController.text);
+
+    if (weight == null || repetitions == null) {
+      return;
+    }
+
+    await DatabaseHelper.addWorkoutSet(
+      widget.exerciseId,
+      weight,
+      repetitions,
+    );
+
+    weightController.clear();
+    repetitionsController.clear();
+
+    loadWorkoutSets();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(exerciseName),
+        title: Text(widget.exerciseName),
         actions: [
           IconButton(
             onPressed: () {},
@@ -23,10 +76,11 @@ class WorkoutScreen extends StatelessWidget {
 
       body: Padding(
         padding: EdgeInsets.all(16),
+
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
 
+          children: [
             Text(
               'Neuer Satz',
               style: TextStyle(
@@ -38,6 +92,7 @@ class WorkoutScreen extends StatelessWidget {
             SizedBox(height: 16),
 
             TextField(
+              controller: weightController,
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
                 labelText: 'Gewicht (kg)',
@@ -48,6 +103,7 @@ class WorkoutScreen extends StatelessWidget {
             SizedBox(height: 12),
 
             TextField(
+              controller: repetitionsController,
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
                 labelText: 'Wiederholungen',
@@ -60,7 +116,7 @@ class WorkoutScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: saveWorkoutSet,
                 child: Text('Satz speichern'),
               ),
             ),
@@ -77,25 +133,23 @@ class WorkoutScreen extends StatelessWidget {
 
             SizedBox(height: 12),
 
-            Card(
-              child: ListTile(
-                title: Text('17.09.2026'),
-                subtitle: Text(
-                  '60 kg × 8\n'
-                  '60 kg × 7\n'
-                  '55 kg × 10',
-                ),
-              ),
-            ),
+            Expanded(
+              child: ListView.builder(
+                itemCount: workoutSets.length,
+                itemBuilder: (context, index) {
+                  final workoutSet = workoutSets[index];
 
-            Card(
-              child: ListTile(
-                title: Text('15.09.2026'),
-                subtitle: Text(
-                  '55 kg × 8\n'
-                  '55 kg × 8\n'
-                  '50 kg × 10',
-                ),
+                  return Card(
+                    child: ListTile(
+                      title: Text(
+                        '${workoutSet.weight} kg × ${workoutSet.repetitions}',
+                      ),
+                      subtitle: Text(
+                        workoutSet.date.substring(0, 10),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ],

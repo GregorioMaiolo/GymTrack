@@ -70,6 +70,7 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => WorkoutScreen(
+                      exerciseId: exercise.id,
                       exerciseName: exercise.name,
                     ),
                   ),
