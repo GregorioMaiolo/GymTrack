@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'database/database_helper.dart';
+import '../database/database_helper.dart';
 
 class CreateExerciseScreen extends StatefulWidget {
   const CreateExerciseScreen({super.key});

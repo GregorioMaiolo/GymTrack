@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'database/database_helper.dart';
 import 'models/exercise.dart';
-import 'workout_screen.dart';
-import 'create_exercise_screen.dart';
+import 'screens/workout_screen.dart';
+import 'screens/create_exercise_screen.dart';
 
 void main() {
   runApp(
