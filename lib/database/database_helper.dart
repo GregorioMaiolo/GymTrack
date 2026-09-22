@@ -106,7 +106,7 @@ class DatabaseHelper {
 
     return result.map((map) => WorkoutSet.fromMap(map)).toList();
   }
-  
+
   static Future<int> getWorkoutCount(int exerciseId) async {
     final database = await getDatabase();
 
@@ -116,5 +116,23 @@ class DatabaseHelper {
     );
 
     return result.first['count'] as int;
+  }
+
+  static Future<void> deleteExercise(int exerciseId) async {
+    final database = await getDatabase();
+
+    // Alle Trainingssätze dieser Übung löschen
+    await database.delete(
+      'workout_sets',
+      where: 'exercise_id = ?',
+      whereArgs: [exerciseId],
+    );
+
+    // Danach die Übung selbst löschen
+    await database.delete(
+      'exercises',
+      where: 'id = ?',
+      whereArgs: [exerciseId],
+    );
   }
 }

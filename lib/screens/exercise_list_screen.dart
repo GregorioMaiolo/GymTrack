@@ -63,6 +63,39 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
     }
   }
 
+  Future<void> deleteExercise(int index) async {
+    final exercise = exercises[index];
+
+    // Aus SQLite löschen
+    await DatabaseHelper.deleteExercise(exercise.id);
+
+    // Aus Listen entfernen
+    exercises.removeAt(index);
+    workoutCounts.remove(exercise.id);
+
+    // AnimatedList über das Löschen informieren
+    listKey.currentState?.removeItem(
+      index,
+      (context, animation) {
+        return SizeTransition(
+          sizeFactor: animation,
+          child: FadeTransition(
+            opacity: animation,
+            child: Card(
+              child: ListTile(
+                title: Text(exercise.name),
+                subtitle: Text(exercise.description),
+              ),
+            ),
+          ),
+        );
+      },
+      duration: Duration(milliseconds: 400),
+    );
+
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!loaded) {
@@ -128,7 +161,12 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
                   exercise: exercise,
                   workoutCount: workoutCounts[exercise.id] ?? 0,
                   animation: animation,
+
                   onExerciseUpdated: loadExercises,
+
+                  onDelete: () {
+                    deleteExercise(index);
+                  },
                 );
               },
             ),
