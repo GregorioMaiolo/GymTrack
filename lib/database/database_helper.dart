@@ -106,4 +106,15 @@ class DatabaseHelper {
 
     return result.map((map) => WorkoutSet.fromMap(map)).toList();
   }
+  
+  static Future<int> getWorkoutCount(int exerciseId) async {
+    final database = await getDatabase();
+
+    final result = await database.rawQuery(
+      'SELECT COUNT(*) as count FROM workout_sets WHERE exercise_id = ?',
+      [exerciseId],
+    );
+
+    return result.first['count'] as int;
+  }
 }

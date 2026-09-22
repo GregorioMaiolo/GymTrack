@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../database/database_helper.dart';
 import '../models/workout_set.dart';
 
+import 'statistics_screen.dart';
+
 class WorkoutScreen extends StatefulWidget {
   final int exerciseId;
   final String exerciseName;
@@ -89,7 +91,17 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
         title: Text(widget.exerciseName),
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => StatisticsScreen(
+                    exerciseId: widget.exerciseId,
+                    exerciseName: widget.exerciseName,
+                  ),
+                ),
+              );
+            },
             icon: Icon(Icons.bar_chart),
           ),
         ],

@@ -23,6 +23,7 @@ class ExerciseListScreen extends StatefulWidget {
 
 class _ExerciseListScreenState extends State<ExerciseListScreen> {
   List<Exercise> exercises = [];
+  Map<int, int> workoutCounts = {};
 
   @override
   void initState() {
@@ -33,8 +34,15 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
   Future<void> loadExercises() async {
     final data = await DatabaseHelper.getExercises();
 
+    Map<int, int> counts = {};
+
+    for (final exercise in data) {
+      counts[exercise.id] = await DatabaseHelper.getWorkoutCount(exercise.id);
+    }
+
     setState(() {
       exercises = data;
+      workoutCounts = counts;
     });
   }
 
@@ -62,11 +70,11 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
               ),
 
               subtitle: Text(
-                '${exercise.description}\n0 Trainings',
+                '${exercise.description}\n${workoutCounts[exercise.id] ?? 0} Trainings',
               ),
 
-              onTap: () {
-                Navigator.push(
+              onTap: () async {
+                await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => WorkoutScreen(
@@ -75,6 +83,8 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
                     ),
                   ),
                 );
+
+                loadExercises();
               },
             ),
           );
