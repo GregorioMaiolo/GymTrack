@@ -13,6 +13,13 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
   final descriptionController = TextEditingController();
 
   @override
+  void dispose() {
+    nameController.dispose();
+    descriptionController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -48,7 +55,9 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () async {
-                  if (nameController.text.isEmpty) {
+                  final name = nameController.text.trim();
+
+                  if (name.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Bitte Name eingeben.'),
@@ -58,7 +67,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
                   }
 
                   await DatabaseHelper.addExercise(
-                    nameController.text,
+                    name,
                     descriptionController.text,
                   );
 

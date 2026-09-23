@@ -34,6 +34,13 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
     loadWorkoutSets();
   }
 
+  @override
+  void dispose() {
+    weightController.dispose();
+    repetitionsController.dispose();
+    super.dispose();
+  }
+
   Future<void> loadWorkoutSets() async {
     final data = await DatabaseHelper.getWorkoutSets(widget.exerciseId);
 
@@ -71,7 +78,21 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
     final weight = double.tryParse(weightController.text);
     final repetitions = int.tryParse(repetitionsController.text);
 
-    if (weight == null || repetitions == null) {
+    if (weight == null || weight < 0) { // Gewicht darf nicht negativ sein aber darf 0 sein.
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Bitte ein gültiges Gewicht eingeben.'),
+        ),
+      );
+      return;
+    }
+
+    if (repetitions == null || repetitions <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Bitte gültige Wiederholungen eingeben.'),
+        ),
+      );
       return;
     }
 
@@ -274,7 +295,7 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
                                           );
                                         },
 
-                                        backgroundColor: const Color.fromARGB(255, 255, 234, 2),
+                                        backgroundColor: const Color.fromARGB(255,67,72,79),
 
                                         foregroundColor: Colors.white,
 
