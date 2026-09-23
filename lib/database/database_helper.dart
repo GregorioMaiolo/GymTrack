@@ -135,4 +135,32 @@ class DatabaseHelper {
       whereArgs: [exerciseId],
     );
   }
+
+  static Future<void> deleteWorkoutSet(int id) async {
+    final database = await getDatabase();
+
+    await database.delete(
+      'workout_sets',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  static Future<void> updateWorkoutSet(
+    int id,
+    double weight,
+    int repetitions,
+  ) async {
+    final database = await getDatabase();
+
+    await database.update(
+      'workout_sets',
+      {
+        'weight': weight,
+        'repetitions': repetitions,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 import '../database/database_helper.dart';
 import '../models/workout_set.dart';
@@ -24,6 +25,8 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
   final repetitionsController = TextEditingController();
 
   List<WorkoutSet> workoutSets = [];
+
+  int? editingSetId; // ID des zu bearbeitenden Satzes, null wenn kein Satz bearbeitet wird
 
   @override
   void initState() {
@@ -72,16 +75,52 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
       return;
     }
 
-    await DatabaseHelper.addWorkoutSet(
-      widget.exerciseId,
-      weight,
-      repetitions,
-    );
+    if (editingSetId == null) {
+      await DatabaseHelper.addWorkoutSet(
+        widget.exerciseId,
+        weight,
+        repetitions,
+      );
+    } else {
+      await DatabaseHelper.updateWorkoutSet(
+        editingSetId!,
+        weight,
+        repetitions,
+      );
+    }
 
     weightController.clear();
     repetitionsController.clear();
 
+    setState(() {
+      editingSetId = null;
+    });
+
     loadWorkoutSets();
+  }
+
+  void editWorkoutSet(WorkoutSet workoutSet) {
+    weightController.text = workoutSet.weight.toString();
+    repetitionsController.text = workoutSet.repetitions.toString();
+
+    setState(() {
+      editingSetId = workoutSet.id;
+    });
+  }
+
+  Future<void> deleteWorkoutSet(WorkoutSet workoutSet) async {
+    await DatabaseHelper.deleteWorkoutSet(workoutSet.id);
+
+    loadWorkoutSets();
+  }
+
+  void cancelEdit() {
+    weightController.clear();
+    repetitionsController.clear();
+
+    setState(() {
+      editingSetId = null;
+    });
   }
 
   @override
@@ -115,7 +154,7 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
 
           children: [
             Text(
-              'Neuer Satz',
+              editingSetId == null ? 'Neuer Satz' : 'Satz bearbeiten',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -124,6 +163,7 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
 
             SizedBox(height: 16),
 
+            // Gewicht und Wiederholungen nebeneinander
             Row(
               children: [
                 Expanded(
@@ -154,12 +194,26 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
 
             SizedBox(height: 12),
 
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: saveWorkoutSet,
-                child: Text('Satz speichern'),
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: saveWorkoutSet,
+                    child: Text(
+                      editingSetId == null ? 'Satz speichern' : 'Satz ändern',
+                    ),
+                  ),
+                ),
+
+                if (editingSetId != null) ...[
+                  SizedBox(width: 8),
+
+                  IconButton(
+                    onPressed: cancelEdit,
+                    icon: Icon(Icons.close),
+                  ),
+                ],
+              ],
             ),
 
             SizedBox(height: 30),
@@ -182,6 +236,7 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
 
                   return ListView.builder(
                     itemCount: dates.length,
+
                     itemBuilder: (context, index) {
                       final date = dates[index];
                       final sets = groupedSets[date]!;
@@ -189,8 +244,10 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
                       return Card(
                         child: Padding(
                           padding: EdgeInsets.all(16),
+
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
+
                             children: [
                               Text(
                                 date,
@@ -203,10 +260,60 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
                               SizedBox(height: 8),
 
                               for (final workoutSet in sets)
-                                Padding(
-                                  padding: EdgeInsets.only(bottom: 4),
-                                  child: Text(
-                                    '${workoutSet.weight} kg × ${workoutSet.repetitions}',
+                                Slidable(
+                                  key: ValueKey(workoutSet.id),
+
+                                  endActionPane: ActionPane(
+                                    motion: DrawerMotion(),
+
+                                    children: [
+                                      SlidableAction(
+                                        onPressed: (context) {
+                                          editWorkoutSet(
+                                            workoutSet,
+                                          );
+                                        },
+
+                                        backgroundColor: const Color.fromARGB(255, 255, 234, 2),
+
+                                        foregroundColor: Colors.white,
+
+                                        icon: Icons.edit,
+
+                                        label: 'Ändern',
+                                      ),
+
+                                      SlidableAction(
+                                        onPressed: (context) {
+                                          deleteWorkoutSet(
+                                            workoutSet,
+                                          );
+                                        },
+
+                                        backgroundColor: Colors.red,
+
+                                        foregroundColor: Colors.white,
+
+                                        icon: Icons.delete,
+
+                                        label: 'Löschen',
+                                      ),
+                                    ],
+                                  ),
+
+                                  child: Padding(
+                                    padding: EdgeInsets.only(
+                                      bottom: 4,
+                                    ),
+
+                                    child: ListTile(
+                                      contentPadding: EdgeInsets.zero,
+
+                                      title: Text(
+                                        '${workoutSet.weight} kg × '
+                                        '${workoutSet.repetitions}',
+                                      ),
+                                    ),
                                   ),
                                 ),
                             ],
