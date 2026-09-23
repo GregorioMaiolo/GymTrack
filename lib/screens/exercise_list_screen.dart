@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../database/database_helper.dart';
+import '../controllers/exercise_list_controller.dart';
 import '../models/exercise.dart';
 import '../widgets/exercise_card.dart';
 import 'create_exercise_screen.dart';
@@ -13,11 +13,9 @@ class ExerciseListScreen extends StatefulWidget {
 }
 
 class _ExerciseListScreenState extends State<ExerciseListScreen> {
-  List<Exercise> exercises = [];
-  Map<int, int> workoutCounts = {};
+  final ExerciseListController controller = ExerciseListController();
 
-  final GlobalKey<AnimatedListState> listKey =
-      GlobalKey<AnimatedListState>();
+  final GlobalKey<AnimatedListState> listKey = GlobalKey<AnimatedListState>();
 
   bool loaded = false;
 
@@ -28,69 +26,44 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
   }
 
   Future<void> loadExercises() async {
-    final data = await DatabaseHelper.getExercises();
+    await controller.loadExercises();
 
-    Map<int, int> counts = {};
-
-    for (final exercise in data) {
-      counts[exercise.id] =
-          await DatabaseHelper.getWorkoutCount(exercise.id);
-    }
+    if (!mounted) return;
 
     setState(() {
-      exercises = data;
-      workoutCounts = counts;
       loaded = true;
     });
   }
 
-  Future<void> addNewExerciseToList() async {
-    final data = await DatabaseHelper.getExercises();
-
-    if (data.length > exercises.length) {
-      final newExercise = data.last;
-      final newIndex = exercises.length;
-
-      setState(() {
-        exercises.add(newExercise);
-        workoutCounts[newExercise.id] = 0;
-      });
-
-      listKey.currentState?.insertItem(
-        newIndex,
-        duration: Duration(milliseconds: 800),
-      );
-    }
-  }
-
   Future<void> deleteExercise(int index) async {
-    final exercise = exercises[index];
+    final exercise = controller.exercises[index];
 
-    // Aus SQLite löschen
-    await DatabaseHelper.deleteExercise(exercise.id);
+    await controller.deleteExercise(exercise);
 
-    // Aus Listen entfernen
-    exercises.removeAt(index);
-    workoutCounts.remove(exercise.id);
+    if (!mounted) return;
 
-    // AnimatedList über das Löschen informieren
     listKey.currentState?.removeItem(
       index,
       (context, animation) {
         return SizeTransition(
           sizeFactor: animation,
+
           child: FadeTransition(
             opacity: animation,
+
             child: Card(
               child: ListTile(
                 title: Text(exercise.name),
-                subtitle: Text(exercise.description),
+                subtitle: Text(
+                  exercise.description,
+                ),
               ),
             ),
           ),
         );
       },
-      duration: Duration(milliseconds: 400),
+
+      duration: const Duration(milliseconds: 400),
     );
 
     setState(() {});
@@ -101,9 +74,10 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
     if (!loaded) {
       return Scaffold(
         appBar: AppBar(
-          title: Text('GymTracker'),
+          title: const Text('GymTracker'),
         ),
-        body: Center(
+
+        body: const Center(
           child: CircularProgressIndicator(),
         ),
       );
@@ -111,18 +85,18 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('GymTracker'),
+        title: const Text('GymTracker'),
       ),
 
-      body: exercises.isEmpty
+      body: controller.exercises.isEmpty
           ? Center(
               child: Padding(
-                padding: EdgeInsets.all(30),
+                padding: const EdgeInsets.all(30),
 
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
 
-                  children: [
+                  children: const [
                     Icon(
                       Icons.fitness_center,
                       size: 60,
@@ -151,15 +125,17 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
             )
           : AnimatedList(
               key: listKey,
-              padding: EdgeInsets.all(16),
-              initialItemCount: exercises.length,
+              padding: const EdgeInsets.all(16),
+              initialItemCount: controller.exercises.length,
 
               itemBuilder: (context, index, animation) {
-                final exercise = exercises[index];
+                final Exercise exercise = controller.exercises[index];
 
                 return ExerciseCard(
                   exercise: exercise,
-                  workoutCount: workoutCounts[exercise.id] ?? 0,
+
+                  workoutCount: controller.workoutCounts[exercise.id] ?? 0,
+
                   animation: animation,
 
                   onExerciseUpdated: loadExercises,
@@ -173,17 +149,34 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
 
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          await Navigator.push(
+          final newExercise = await Navigator.push<Exercise>(
             context,
+
             MaterialPageRoute(
-              builder: (context) => CreateExerciseScreen(),
+              builder: (context) => const CreateExerciseScreen(),
             ),
           );
 
-          addNewExerciseToList();
+          if (newExercise == null) {
+            return;
+          }
+
+          controller.exercises.add(newExercise);
+          controller.workoutCounts[newExercise.id] = 0;
+
+          final newIndex = controller.exercises.length - 1;
+
+          setState(() {});
+
+          listKey.currentState?.insertItem(
+            newIndex,
+            duration: const Duration(
+              milliseconds: 800,
+            ),
+          );
         },
 
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }

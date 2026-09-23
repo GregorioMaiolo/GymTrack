@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
-import '../database/database_helper.dart';
+import '../controllers/workout_controller.dart';
 import '../models/workout_set.dart';
 
 import 'statistics_screen.dart';
@@ -22,11 +22,10 @@ class WorkoutScreen extends StatefulWidget {
 
 class _WorkoutScreenState extends State<WorkoutScreen> {
   final weightController = TextEditingController();
+
   final repetitionsController = TextEditingController();
 
-  List<WorkoutSet> workoutSets = [];
-
-  int? editingSetId; // ID des zu bearbeitenden Satzes, null wenn kein Satz bearbeitet wird
+  final WorkoutController controller = WorkoutController();
 
   @override
   void initState() {
@@ -42,170 +41,149 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
   }
 
   Future<void> loadWorkoutSets() async {
-    final data = await DatabaseHelper.getWorkoutSets(widget.exerciseId);
+    await controller.loadWorkoutSets(
+      widget.exerciseId,
+    );
 
-    setState(() {
-      workoutSets = data;
-    });
-  }
+    if (!mounted) return;
 
-  Map<String, List<WorkoutSet>> groupSetsByDate() {
-    Map<String, List<WorkoutSet>> groupedSets = {};
-
-    for (final workoutSet in workoutSets) {
-      final date = workoutSet.date.substring(0, 10);
-
-      if (!groupedSets.containsKey(date)) {
-        groupedSets[date] = [];
-      }
-
-      groupedSets[date]!.add(workoutSet);
-    }
-
-    return groupedSets;
+    setState(() {});
   }
 
   Future<void> saveWorkoutSet() async {
-    if (weightController.text.isEmpty || repetitionsController.text.isEmpty) {
+    final error = await controller.saveWorkoutSet(
+      exerciseId: widget.exerciseId,
+      weightText: weightController.text,
+      repetitionsText: repetitionsController.text,
+    );
+
+    if (!mounted) return;
+
+    if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Bitte Gewicht und Wiederholungen eingeben.'),
+          content: Text(error),
         ),
       );
+
       return;
-    }
-
-    final weight = double.tryParse(weightController.text);
-    final repetitions = int.tryParse(repetitionsController.text);
-
-    if (weight == null || weight < 0) { // Gewicht darf nicht negativ sein aber darf 0 sein.
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Bitte ein gültiges Gewicht eingeben.'),
-        ),
-      );
-      return;
-    }
-
-    if (repetitions == null || repetitions <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Bitte gültige Wiederholungen eingeben.'),
-        ),
-      );
-      return;
-    }
-
-    if (editingSetId == null) {
-      await DatabaseHelper.addWorkoutSet(
-        widget.exerciseId,
-        weight,
-        repetitions,
-      );
-    } else {
-      await DatabaseHelper.updateWorkoutSet(
-        editingSetId!,
-        weight,
-        repetitions,
-      );
     }
 
     weightController.clear();
     repetitionsController.clear();
 
-    setState(() {
-      editingSetId = null;
-    });
+    setState(() {});
 
-    loadWorkoutSets();
+    await loadWorkoutSets();
   }
 
   void editWorkoutSet(WorkoutSet workoutSet) {
     weightController.text = workoutSet.weight.toString();
+
     repetitionsController.text = workoutSet.repetitions.toString();
 
-    setState(() {
-      editingSetId = workoutSet.id;
-    });
+    controller.editWorkoutSet(
+      workoutSet,
+    );
+
+    setState(() {});
   }
 
   Future<void> deleteWorkoutSet(WorkoutSet workoutSet) async {
-    await DatabaseHelper.deleteWorkoutSet(workoutSet.id);
+    await controller.deleteWorkoutSet(workoutSet);
 
-    loadWorkoutSets();
+    await loadWorkoutSets();
   }
 
   void cancelEdit() {
     weightController.clear();
     repetitionsController.clear();
 
-    setState(() {
-      editingSetId = null;
-    });
+    controller.cancelEdit();
+
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
+    final groupedSets = controller.groupSetsByDate();
+
+    final dates = groupedSets.keys.toList();
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.exerciseName),
+
         actions: [
           IconButton(
             onPressed: () {
               Navigator.push(
                 context,
+
                 MaterialPageRoute(
                   builder: (context) => StatisticsScreen(
                     exerciseId: widget.exerciseId,
+
                     exerciseName: widget.exerciseName,
                   ),
                 ),
               );
             },
-            icon: Icon(Icons.bar_chart),
+
+            icon: const Icon(
+              Icons.bar_chart,
+            ),
           ),
         ],
       ),
 
       body: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
 
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
 
           children: [
             Text(
-              editingSetId == null ? 'Neuer Satz' : 'Satz bearbeiten',
-              style: TextStyle(
+              controller.editingSetId == null
+                  ? 'Neuer Satz'
+                  : 'Satz bearbeiten',
+
+              style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
               ),
             ),
 
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
 
-            // Gewicht und Wiederholungen nebeneinander
             Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: weightController,
+
                     keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
+
+                    decoration: const InputDecoration(
                       labelText: 'Gewicht (kg)',
+
                       border: OutlineInputBorder(),
                     ),
                   ),
                 ),
 
-                SizedBox(width: 12),
+                const SizedBox(width: 12),
 
                 Expanded(
                   child: TextField(
                     controller: repetitionsController,
+
                     keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
+
+                    decoration: const InputDecoration(
                       labelText: 'Wiederholungen',
+
                       border: OutlineInputBorder(),
                     ),
                   ),
@@ -213,135 +191,145 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
               ],
             ),
 
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
 
             Row(
               children: [
                 Expanded(
                   child: ElevatedButton(
                     onPressed: saveWorkoutSet,
+
                     child: Text(
-                      editingSetId == null ? 'Satz speichern' : 'Satz ändern',
+                      controller.editingSetId == null
+                          ? 'Satz speichern'
+                          : 'Satz ändern',
                     ),
                   ),
                 ),
 
-                if (editingSetId != null) ...[
-                  SizedBox(width: 8),
+                if (controller.editingSetId != null) ...[
+                  const SizedBox(width: 8),
 
                   IconButton(
                     onPressed: cancelEdit,
-                    icon: Icon(Icons.close),
+                    icon: const Icon(
+                      Icons.close,
+                    ),
                   ),
                 ],
               ],
             ),
 
-            SizedBox(height: 30),
+            const SizedBox(height: 30),
 
-            Text(
+            const Text(
               'Trainingsverlauf',
+
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
               ),
             ),
 
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
 
             Expanded(
-              child: Builder(
-                builder: (context) {
-                  final groupedSets = groupSetsByDate();
-                  final dates = groupedSets.keys.toList();
+              child: ListView.builder(
+                itemCount: dates.length,
 
-                  return ListView.builder(
-                    itemCount: dates.length,
+                itemBuilder: (context, index) {
+                  final date = dates[index];
 
-                    itemBuilder: (context, index) {
-                      final date = dates[index];
-                      final sets = groupedSets[date]!;
+                  final List<WorkoutSet> sets = groupedSets[date]!;
 
-                      return Card(
-                        child: Padding(
-                          padding: EdgeInsets.all(16),
+                  return Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
 
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
 
-                            children: [
-                              Text(
-                                date,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                        children: [
+                          Text(
+                            date,
+
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+
+                          const SizedBox(
+                            height: 8,
+                          ),
+
+                          for (final workoutSet in sets)
+                            Slidable(
+                              key: ValueKey(
+                                workoutSet.id,
                               ),
 
-                              SizedBox(height: 8),
+                              endActionPane: ActionPane(
+                                motion: const DrawerMotion(),
 
-                              for (final workoutSet in sets)
-                                Slidable(
-                                  key: ValueKey(workoutSet.id),
+                                children: [
+                                  SlidableAction(
+                                    onPressed: (context) {
+                                      editWorkoutSet(
+                                        workoutSet,
+                                      );
+                                    },
 
-                                  endActionPane: ActionPane(
-                                    motion: DrawerMotion(),
+                                    backgroundColor: const Color.fromARGB(
+                                      255,
+                                      67,
+                                      72,
+                                      79,
+                                    ),
 
-                                    children: [
-                                      SlidableAction(
-                                        onPressed: (context) {
-                                          editWorkoutSet(
-                                            workoutSet,
-                                          );
-                                        },
+                                    foregroundColor: Colors.white,
 
-                                        backgroundColor: const Color.fromARGB(255,67,72,79),
+                                    icon: Icons.edit,
 
-                                        foregroundColor: Colors.white,
-
-                                        icon: Icons.edit,
-
-                                        label: 'Ändern',
-                                      ),
-
-                                      SlidableAction(
-                                        onPressed: (context) {
-                                          deleteWorkoutSet(
-                                            workoutSet,
-                                          );
-                                        },
-
-                                        backgroundColor: Colors.red,
-
-                                        foregroundColor: Colors.white,
-
-                                        icon: Icons.delete,
-
-                                        label: 'Löschen',
-                                      ),
-                                    ],
+                                    label: 'Ändern',
                                   ),
 
-                                  child: Padding(
-                                    padding: EdgeInsets.only(
-                                      bottom: 4,
-                                    ),
+                                  SlidableAction(
+                                    onPressed: (context) {
+                                      deleteWorkoutSet(
+                                        workoutSet,
+                                      );
+                                    },
 
-                                    child: ListTile(
-                                      contentPadding: EdgeInsets.zero,
+                                    backgroundColor: Colors.red,
 
-                                      title: Text(
-                                        '${workoutSet.weight} kg × '
-                                        '${workoutSet.repetitions}',
-                                      ),
-                                    ),
+                                    foregroundColor: Colors.white,
+
+                                    icon: Icons.delete,
+
+                                    label: 'Löschen',
+                                  ),
+                                ],
+                              ),
+
+                              child: Padding(
+                                padding: const EdgeInsets.only(
+                                  bottom: 4,
+                                ),
+
+                                child: ListTile(
+                                  contentPadding: EdgeInsets.zero,
+
+                                  title: Text(
+                                    '${workoutSet.weight} kg × '
+                                    '${workoutSet.repetitions}',
                                   ),
                                 ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
                   );
                 },
               ),

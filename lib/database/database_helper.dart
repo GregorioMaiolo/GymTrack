@@ -27,7 +27,7 @@ class DatabaseHelper {
       CREATE TABLE workout_sets(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         exercise_id INTEGER NOT NULL,
-        weight REAL NOT NULL, 
+        weight REAL NOT NULL,
         repetitions INTEGER NOT NULL,
         date TEXT NOT NULL
       )
@@ -89,7 +89,7 @@ class DatabaseHelper {
         'weight': weight,
         'repetitions': repetitions,
         'date': DateTime.now().toIso8601String(),
-        // 'date': '2026-09-21',//für Testen
+        // 'date': '2026-10-29',//für Testen
       },
     );
   }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../database/database_helper.dart';
+import '../controllers/create_exercise_controller.dart';
 
 class CreateExerciseScreen extends StatefulWidget {
   const CreateExerciseScreen({super.key});
@@ -13,6 +13,8 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
   final nameController = TextEditingController();
   final descriptionController = TextEditingController();
 
+  final CreateExerciseController controller = CreateExerciseController();
+
   @override
   void dispose() {
     nameController.dispose();
@@ -20,64 +22,64 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
     super.dispose();
   }
 
+  Future<void> createExercise() async {
+    final exercise = await controller.createExercise(
+      nameController.text,
+      descriptionController.text,
+    );
+
+    if (!mounted) return;
+
+    if (exercise == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Bitte einen gültigen Namen eingeben.'),
+        ),
+      );
+      return;
+    }
+
+    Navigator.pop(context, exercise);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Neue Übung'),
+        title: const Text('Neue Übung'),
       ),
 
       body: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
+
         child: Column(
           children: [
             TextField(
               controller: nameController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Name der Übung',
                 border: OutlineInputBorder(),
               ),
             ),
 
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
 
             TextField(
               controller: descriptionController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Beschreibung',
                 border: OutlineInputBorder(),
               ),
             ),
 
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
 
             SizedBox(
               width: double.infinity,
+
               child: ElevatedButton(
-                onPressed: () async {
-                  final name = nameController.text.trim();
-
-                  if (name.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Bitte Name eingeben.'),
-                      ),
-                    );
-                    return;
-                  }
-
-                  final navigator = Navigator.of(context);
-
-                  await DatabaseHelper.addExercise(
-                    name,
-                    descriptionController.text,
-                  );
-
-                  if (!mounted) return;
-
-                  navigator.pop();
-                },
-                child: Text('Übung erstellen'),
+                onPressed: createExercise,
+                child: const Text('Übung erstellen'),
               ),
             ),
           ],
