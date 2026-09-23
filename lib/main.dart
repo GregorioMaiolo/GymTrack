@@ -6,6 +6,7 @@ void main() {
   runApp(
     MaterialApp(
       theme: ThemeData.dark(),
+      debugShowCheckedModeBanner: false,
       home: ExerciseListScreen(),
     ),
   );

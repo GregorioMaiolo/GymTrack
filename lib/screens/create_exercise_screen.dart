@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../database/database_helper.dart';
 
 class CreateExerciseScreen extends StatefulWidget {
@@ -30,7 +31,6 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
         padding: EdgeInsets.all(16),
         child: Column(
           children: [
-
             TextField(
               controller: nameController,
               decoration: InputDecoration(
@@ -66,12 +66,16 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
                     return;
                   }
 
+                  final navigator = Navigator.of(context);
+
                   await DatabaseHelper.addExercise(
                     name,
                     descriptionController.text,
                   );
 
-                  Navigator.pop(context);
+                  if (!mounted) return;
+
+                  navigator.pop();
                 },
                 child: Text('Übung erstellen'),
               ),
