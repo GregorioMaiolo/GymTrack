@@ -124,24 +124,32 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
 
             SizedBox(height: 16),
 
-            TextField(
-              controller: weightController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'Gewicht (kg)',
-                border: OutlineInputBorder(),
-              ),
-            ),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: weightController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: 'Gewicht (kg)',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
 
-            SizedBox(height: 12),
+                SizedBox(width: 12),
 
-            TextField(
-              controller: repetitionsController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'Wiederholungen',
-                border: OutlineInputBorder(),
-              ),
+                Expanded(
+                  child: TextField(
+                    controller: repetitionsController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: 'Wiederholungen',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+              ],
             ),
 
             SizedBox(height: 12),
