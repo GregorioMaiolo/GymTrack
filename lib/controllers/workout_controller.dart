@@ -42,7 +42,7 @@ class WorkoutController {
     // Komma durch Punkt ersetzen, damit z.B. 50,5 auch funktioniert
     final weightString = weightText.replaceAll(',', '.');
 
-    // Prüfen, ob maximal 2 Nachkommastellen vorhanden sind
+    // Die Eingabe vor dem Parsen auf zwei Nachkommastellen begrenzen.
     final parts = weightString.split('.');
 
     if (parts.length == 2 && parts[1].length > 2) {

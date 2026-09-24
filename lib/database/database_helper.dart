@@ -6,8 +6,8 @@ import '../models/workout_set.dart';
 
 class DatabaseHelper {
   static Future<Database> getDatabase() async {
-    final databasePath = await getDatabasesPath();
-    final path = join(databasePath, 'gymtracker.db');
+    final databasePath = await getDatabasesPath(); // Pfad zum Speicherort der Datenbank abrufen
+    final path = join(databasePath, 'gymtracker.db'); // Pfad zur Datenbankdatei erstellen
 
     return openDatabase(
       path,
@@ -36,6 +36,7 @@ class DatabaseHelper {
       },
 
       onUpgrade: (database, oldVersion, newVersion) async {
+        // Upgrade von Version 1 auf Version 2: Neue Tabelle "workout_sets" hinzufügen
         if (oldVersion < 2) {
           await database.execute(
             '''
@@ -70,7 +71,7 @@ class DatabaseHelper {
   static Future<List<Exercise>> getExercises() async {
     final database = await getDatabase();
 
-    final result = await database.query('exercises');
+    final result = await database.query('exercises'); // Alle Übungen aus der Datenbank abrufen
 
     return result.map((map) => Exercise.fromMap(map)).toList();
   }
@@ -89,7 +90,6 @@ class DatabaseHelper {
         'weight': weight,
         'repetitions': repetitions,
         'date': DateTime.now().toIso8601String(),
-        // 'date': '2026-10-29',//für Testen
       },
     );
   }

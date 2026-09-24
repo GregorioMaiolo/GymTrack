@@ -83,7 +83,7 @@ class ExerciseCard extends StatelessWidget {
               onDelete();
             }
 
-            // false, weil wir selbst die AnimatedList entfernen.
+            //verhindert, dass die Karte automatisch entfernt wird, da wir die Löschung selbst behandeln
             return false;
           },
 

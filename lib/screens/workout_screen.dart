@@ -28,20 +28,20 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
   final WorkoutController controller = WorkoutController();
 
   @override
-  void initState() {
+  void initState() { // Initialisierung der State-Klasse
     super.initState();
     loadWorkoutSets();
   }
 
   @override
-  void dispose() {
+  void dispose() { //eingabefelder wieder freigeben
     weightController.dispose();
     repetitionsController.dispose();
     super.dispose();
   }
 
-  Future<void> loadWorkoutSets() async {
-    await controller.loadWorkoutSets(
+  Future<void> loadWorkoutSets() async { // Lade die Trainingssätze für die aktuelle Übung
+    await controller.loadWorkoutSets( 
       widget.exerciseId,
     );
 
@@ -59,7 +59,7 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
 
     if (!mounted) return;
 
-    if (error != null) {
+    if (error != null) { 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(error),

@@ -9,7 +9,7 @@ class ExerciseListScreen extends StatefulWidget {
   const ExerciseListScreen({super.key});
 
   @override
-  State<ExerciseListScreen> createState() => _ExerciseListScreenState();
+  State<ExerciseListScreen> createState() => _ExerciseListScreenState(); // State-Klasse für die Übungslistenansicht
 }
 
 class _ExerciseListScreenState extends State<ExerciseListScreen> {
@@ -20,7 +20,7 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
   bool loaded = false;
 
   @override
-  void initState() {
+  void initState() {// einmalige Initialisierung der State-Klasse, um die Übungen zu laden
     super.initState();
     loadExercises();
   }
@@ -71,7 +71,7 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (!loaded) {
+    if (!loaded) { //wenn noch nicht geladen
       return Scaffold(
         appBar: AppBar(
           title: const Text('GymTracker'),
