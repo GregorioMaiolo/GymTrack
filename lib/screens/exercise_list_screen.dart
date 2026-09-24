@@ -147,8 +147,8 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
               },
             ),
 
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
+      floatingActionButton: FloatingActionButton(//
+        onPressed: () async { // Navigiert zur CreateExerciseScreen-Seite, um eine neue Übung zu erstellen
           final newExercise = await Navigator.push<Exercise>(
             context,
 

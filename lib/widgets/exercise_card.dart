@@ -33,14 +33,14 @@ class ExerciseCard extends StatelessWidget {
 
           actions: [
             TextButton(
-              onPressed: () {
+              onPressed: () {// schliesst den Dialog und gibt false zurück, wenn der Benutzer auf "Abbrechen" klickt
                 Navigator.pop(context, false);
               },
               child: Text('Abbrechen'),
             ),
 
             ElevatedButton(
-              onPressed: () {
+              onPressed: () {// schliesst den Dialog und gibt true zurück, wenn der Benutzer auf "Löschen" klickt
                 Navigator.pop(context, true);
               },
               child: Text('Löschen'),
@@ -61,7 +61,7 @@ class ExerciseCard extends StatelessWidget {
       child: FadeTransition(
         opacity: animation,
 
-        child: Dismissible(
+        child: Dismissible( // ermöglicht das Wischen der Karte zum Löschen
           key: ValueKey(exercise.id),
 
           direction: DismissDirection.endToStart,
@@ -102,7 +102,7 @@ class ExerciseCard extends StatelessWidget {
                 '$workoutCount Trainings',
               ),
 
-              onTap: () async {
+              onTap: () async { // Navigiert zur WorkoutScreen-Seite, wenn die Karte angetippt wird
                 await Navigator.push(
                   context,
                   MaterialPageRoute(

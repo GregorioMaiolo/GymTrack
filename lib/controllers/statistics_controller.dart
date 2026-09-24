@@ -4,7 +4,7 @@ import '../models/workout_set.dart';
 class StatisticsController {
   List<WorkoutSet> workoutSets = [];
 
-  Future<void> loadWorkoutSets(int exerciseId) async {
+  Future<void> loadWorkoutSets(int exerciseId) async { // Lädt die Trainingssätze für eine bestimmte Übung aus der Datenbank
     final data = await DatabaseHelper.getWorkoutSets(exerciseId);
 
     workoutSets = data.reversed.toList();

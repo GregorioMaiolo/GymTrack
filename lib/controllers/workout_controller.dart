@@ -6,7 +6,7 @@ class WorkoutController {
 
   int? editingSetId;
 
-  Future<void> loadWorkoutSets(
+  Future<void> loadWorkoutSets( // Lädt die Trainingssätze für eine bestimmte Übung aus der Datenbank
     int exerciseId,
   ) async {
     workoutSets = await DatabaseHelper.getWorkoutSets(
