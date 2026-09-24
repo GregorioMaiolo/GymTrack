@@ -9,6 +9,7 @@ class Exercise {
     required this.description,
   });
 
+  // Factory-Methode, um eine Exercise-Instanz aus einer Map zu erstellen
   factory Exercise.fromMap(Map<String, dynamic> map) {
     return Exercise(
       id: map['id'],

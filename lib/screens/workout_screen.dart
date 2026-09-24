@@ -280,12 +280,7 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
                                       );
                                     },
 
-                                    backgroundColor: const Color.fromARGB(
-                                      255,
-                                      67,
-                                      72,
-                                      79,
-                                    ),
+                                    backgroundColor: const Color.fromARGB(255,67,72,79),
 
                                     foregroundColor: Colors.white,
 
